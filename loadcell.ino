@@ -19,7 +19,7 @@ char pass[] = "Babu@08012003";
 const int DTpin = 27;
 const int SCKpin = 14;
 HX711 mass;
-float V=0.00005647022;
+float V=0.00005647022; //volume of metal ball 4/3pirqube
 float g=9.8;
 //brown gnd
 //vcc orange
@@ -38,12 +38,12 @@ void loop()
   //R,B,G,W
   //float F=force.read();
   //Serial.println(mass.read());
-  float m = ((((mass.read()-189172.000)/22234)*9.81)/1000);
+  float m = ((((mass.read()-189172.000)/22234)*9.81)/1000); //22234 is the ref weight //force = mass * g //phy terms
   //F = ((((F-187630)/13200)*6)/1000);
   //F = ((((F-189172.000)/22234)*10)/1000)-0.001;
   //Serial.println(F,3);
   //Serial.print("\n");
-  float density = (m/V);
+  float density = (m/V); //mass/vol
   density = abs(density)-40;
   Serial.print("density: ");
   Serial.println(density,3);
