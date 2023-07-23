@@ -13,7 +13,7 @@ char pass[] = "Babu@08012003";
 const int potPin=A0;
 float ph;
 float Value=0;
- 
+
 void setup() {
   Serial.begin(115200);
   Blynk.begin(auth, ssid, pass);
@@ -21,13 +21,13 @@ void setup() {
   delay(1000);
 }
  void loop(){
-    Blynk.run();
-    Value= analogRead(potPin);
+    Blynk.run(); //this initializes the platform
+    Value= analogRead(potPin); //this reads from the pin which we defined where sensor is connected to that pin
     Serial.print(Value);
     Serial.print(" | ");
-    float voltage=Value*(3.3/4095.0);
+    float voltage=Value*(3.3/4095.0); //baro value multiplied with voltage from micro/max value produced by that sensor
     ph=(3.3*voltage)+4.3;
-    Blynk.virtualWrite(V1,ph);
+    Blynk.virtualWrite(V1,ph); //widget alli print madodakke
     Serial.println(ph);
     delay(1000);
  }
