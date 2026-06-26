@@ -136,3 +136,116 @@ void loop() {
     Serial.printf("%02X ", b);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+#include <HardwareSerial.h>
+
+HardwareSerial PMU(2);
+
+#define RX_PIN 4        // Change to your RX pin
+#define TX_PIN 17
+#define LED_PIN 2
+
+uint8_t packet[8];
+uint8_t index = 0;
+
+void setup() {
+
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  Serial.begin(115200);
+
+  PMU.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+
+  Serial.println("PMU Protocol Analyzer Started");
+}
+
+void processCommand(char cmd)
+{
+  Serial.print("Command Received : ");
+  Serial.println(cmd);
+
+  switch(cmd)
+  {
+    case 'J':
+      digitalWrite(LED_PIN, HIGH);
+      Serial.println("LED ON");
+      break;
+
+    case 'j':
+      digitalWrite(LED_PIN, LOW);
+      Serial.println("LED OFF");
+      break;
+
+    case 'F':
+      Serial.println("Function F");
+      break;
+
+    case 'K':
+      Serial.println("Function K");
+      break;
+
+    case 'Q':
+      Serial.println("Function Q");
+      break;
+
+    default:
+      Serial.print("Unknown Command : ");
+      Serial.println(cmd);
+      break;
+  }
+}
+
+void loop()
+{
+  while(PMU.available())
+  {
+    uint8_t b = PMU.read();
+
+    packet[index++] = b;
+
+    if(index == 8)
+    {
+      Serial.print("Packet : ");
+
+      for(int i=0;i<8;i++)
+      {
+        if(packet[i] < 16)
+          Serial.print("0");
+
+        Serial.print(packet[i],HEX);
+        Serial.print(" ");
+      }
+
+      Serial.println();
+
+      if(packet[0]==0x02 &&
+         packet[1]=='c' &&
+         packet[2]=='m' &&
+         packet[3]=='d' &&
+         packet[4]=='(' &&
+         packet[6]==')' &&
+         packet[7]==0x0A)
+      {
+          processCommand((char)packet[5]);
+      }
+      else
+      {
+          Serial.println("Invalid Packet");
+      }
+
+      index = 0;
+    }
+  }
+}
