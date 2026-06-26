@@ -120,3 +120,19 @@ void loop() {
     last = now;
   }
 }
+
+
+
+HardwareSerial PMU(2);
+
+void setup() {
+  Serial.begin(115200);
+  PMU.begin(115200, SERIAL_8N1, 4, 17);   // RX = GPIO4
+}
+
+void loop() {
+  while (PMU.available()) {
+    uint8_t b = PMU.read();
+    Serial.printf("%02X ", b);
+  }
+}
