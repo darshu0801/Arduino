@@ -70,3 +70,31 @@ void loop() {
 
   delay(1000);
 }
+
+
+
+void setup() {
+  pinMode(25, OUTPUT);
+
+  Serial.begin(115200);
+  while (!Serial);
+
+  Serial1.setRX(1);
+  Serial1.begin(115200);
+
+  Serial.println("Started");
+}
+
+void loop() {
+  if (Serial1.available()) {
+    digitalWrite(25, HIGH);   // LED ON whenever any byte arrives
+
+    while (Serial1.available()) {
+      uint8_t b = Serial1.read();
+      Serial.print("0x");
+      Serial.println(b, HEX);
+    }
+
+    digitalWrite(25, LOW);
+  }
+}
