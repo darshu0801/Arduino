@@ -152,31 +152,21 @@ void loop() {
 
 HardwareSerial PMU(2);
 
-#define RX_PIN 4        // Change to your RX pin
-#define TX_PIN 17
-#define LED_PIN 2
+// Change these if required
+#define RX_PIN   4
+#define TX_PIN   17
+#define LED_PIN  2
 
 uint8_t packet[8];
-uint8_t index = 0;
-
-void setup() {
-
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
-
-  Serial.begin(115200);
-
-  PMU.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
-
-  Serial.println("PMU Protocol Analyzer Started");
-}
+uint8_t rxIndex = 0;
+bool receiving = false;
 
 void processCommand(char cmd)
 {
-  Serial.print("Command Received : ");
+  Serial.print("Command : ");
   Serial.println(cmd);
 
-  switch(cmd)
+  switch (cmd)
   {
     case 'J':
       digitalWrite(LED_PIN, HIGH);
@@ -207,45 +197,73 @@ void processCommand(char cmd)
   }
 }
 
+void setup()
+{
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  Serial.begin(115200);
+
+  PMU.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+
+  Serial.println();
+  Serial.println("===== PMU Protocol Analyzer =====");
+}
+
 void loop()
 {
-  while(PMU.available())
+  while (PMU.available())
   {
     uint8_t b = PMU.read();
 
-    packet[index++] = b;
-
-    if(index == 8)
+    // Wait for Start Of Text
+    if (!receiving)
     {
-      Serial.print("Packet : ");
-
-      for(int i=0;i<8;i++)
+      if (b == 0x02)
       {
-        if(packet[i] < 16)
-          Serial.print("0");
-
-        Serial.print(packet[i],HEX);
-        Serial.print(" ");
+        receiving = true;
+        rxIndex = 0;
+        packet[rxIndex++] = b;
       }
+    }
+    else
+    {
+      packet[rxIndex++] = b;
 
-      Serial.println();
-
-      if(packet[0]==0x02 &&
-         packet[1]=='c' &&
-         packet[2]=='m' &&
-         packet[3]=='d' &&
-         packet[4]=='(' &&
-         packet[6]==')' &&
-         packet[7]==0x0A)
+      if (rxIndex >= 8)
       {
+        receiving = false;
+
+        Serial.print("Packet : ");
+
+        for (int i = 0; i < 8; i++)
+        {
+          if (packet[i] < 16)
+            Serial.print("0");
+
+          Serial.print(packet[i], HEX);
+          Serial.print(" ");
+        }
+
+        Serial.println();
+
+        if (packet[0] == 0x02 &&
+            packet[1] == 'c' &&
+            packet[2] == 'm' &&
+            packet[3] == 'd' &&
+            packet[4] == '(' &&
+            packet[6] == ')' &&
+            packet[7] == 0x0A)
+        {
           processCommand((char)packet[5]);
-      }
-      else
-      {
+        }
+        else
+        {
           Serial.println("Invalid Packet");
-      }
+        }
 
-      index = 0;
+        rxIndex = 0;
+      }
     }
   }
 }
