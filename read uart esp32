@@ -96,3 +96,27 @@ void setup()
 void loop()
 {
 }
+
+
+
+
+
+
+#define RX_PIN 16
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(RX_PIN, INPUT_PULLUP);
+}
+
+void loop() {
+  static int last = digitalRead(RX_PIN);
+
+  int now = digitalRead(RX_PIN);
+
+  if (now != last) {
+    Serial.print("Changed: ");
+    Serial.println(now);
+    last = now;
+  }
+}
