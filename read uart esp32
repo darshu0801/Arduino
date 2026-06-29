@@ -267,3 +267,62 @@ void loop()
     }
   }
 }
+
+
+
+
+
+
+
+
+uint8_t packet[8];
+uint8_t rxIndex = 0;
+bool receiving = false;
+
+void setup()
+{
+    Serial.begin(115200);
+}
+
+void loop()
+{
+    while (Serial.available())
+    {
+        uint8_t b = Serial.read();
+
+        if (!receiving)
+        {
+            if (b == 0x02)
+            {
+                receiving = true;
+                rxIndex = 0;
+                packet[rxIndex++] = b;
+            }
+        }
+        else
+        {
+            packet[rxIndex++] = b;
+
+            if (rxIndex == 8)
+            {
+                receiving = false;
+
+                if (packet[0] == 0x02 &&
+                    packet[1] == 'c' &&
+                    packet[2] == 'm' &&
+                    packet[3] == 'd' &&
+                    packet[4] == '(' &&
+                    packet[5] == 'j' &&
+                    packet[6] == ')' &&
+                    packet[7] == 0x0A)
+                {
+                    // ACK
+                    Serial.write((uint8_t)0x47);
+                    Serial.flush();
+                }
+
+                rxIndex = 0;
+            }
+        }
+    }
+}
