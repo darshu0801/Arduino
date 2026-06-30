@@ -399,3 +399,150 @@ void loop()
         }
     }
 }
+
+
+
+
+#define OUTPUT_PIN 23
+#define OUTPUT_PIN1 22
+#define OUTPUT_PIN2 1
+#define OUTPUT_PIN3 3
+#define OUTPUT_PIN4 21
+#define OUTPUT_PIN5 19
+#define OUTPUT_PIN6 18
+#define OUTPUT_PIN7 5
+
+
+uint8_t packet[8];
+uint8_t rxIndex = 0;
+bool receiving = false;
+
+void setup()
+{
+    pinMode(OUTPUT_PIN, OUTPUT);
+    digitalWrite(OUTPUT_PIN, LOW);
+
+    Serial.begin(115200);
+}
+
+void loop()
+{
+    while (Serial.available())
+    {
+        uint8_t b = Serial.read();
+
+        if (!receiving)
+        {
+            if (b == 0x02)
+            {
+                receiving = true;
+                rxIndex = 0;
+                packet[rxIndex++] = b;
+            }
+        }
+        else
+        {
+            packet[rxIndex++] = b;
+
+            if (rxIndex >= 8)
+            {
+                receiving = false;
+
+                if (packet[0] == 0x02 &&
+                    packet[1] == 'c' &&
+                    packet[2] == 'm' &&
+                    packet[3] == 'd' &&
+                    packet[4] == '(' &&
+                    packet[6] == ')' &&
+                    packet[7] == 0x0A)
+                {
+                    // Send ACK
+                    Serial.write((uint8_t)0x47);
+                    Serial.flush();
+
+                    // Control GPIO23
+                    if (packet[5] == 'j')
+                    {
+                        digitalWrite(OUTPUT_PIN, LOW);
+                    }
+                    else if (packet[5] == 'J')
+                    {
+                        digitalWrite(OUTPUT_PIN, HIGH);
+                    }
+
+                    else if (packet[5] == 'k')
+                    {
+                        digitalWrite(OUTPUT_PIN1, LOW);
+                    }
+
+                    else if (packet[5] == 'K')
+                    {
+                        digitalWrite(OUTPUT_PIN1, HIGH);
+                    }
+
+                    else if (packet[5] == 'm')
+                    {
+                        digitalWrite(OUTPUT_PIN2, LOW);
+                    }
+
+                    else if (packet[5] == 'M')
+                    {
+                        digitalWrite(OUTPUT_PIN2, HIGH);
+                    }
+
+                    else if (packet[5] == 'l')
+                    {
+                        digitalWrite(OUTPUT_PIN3, LOW);
+                    }
+
+                    else if (packet[5] == 'L')
+                    {
+                        digitalWrite(OUTPUT_PIN3, HIGH);
+                    }
+
+                    else if (packet[5] == 'o')
+                    {
+                        digitalWrite(OUTPUT_PIN4, LOW);
+                    }
+
+                    else if (packet[5] == 'O')
+                    {
+                        digitalWrite(OUTPUT_PIN4, HIGH);
+                    }
+
+                    else if (packet[5] == 'r')
+                    {
+                        digitalWrite(OUTPUT_PIN5, LOW);
+                    }
+
+                    else if (packet[5] == 'R')
+                    {
+                        digitalWrite(OUTPUT_PIN5, HIGH);
+                    }
+
+                    else if (packet[5] == 's')
+                    {
+                        digitalWrite(OUTPUT_PIN6, LOW);
+                    }
+
+                    else if (packet[5] == 'S')
+                    {
+                        digitalWrite(OUTPUT_PIN6, HIGH);
+                    }
+
+                    else if (packet[5] == 'y')
+                    {
+                        digitalWrite(OUTPUT_PIN7, LOW);
+                    }
+
+                    else if (packet[5] == 'Y')
+                    {
+                        digitalWrite(OUTPUT_PIN7, HIGH);
+                    }
+                }
+
+                rxIndex = 0;
+            }
+        }
+    }
+}
