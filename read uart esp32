@@ -546,3 +546,88 @@ void loop()
         }
     }
 }
+
+
+
+
+
+
+
+#define NUM_PINS 8
+const uint8_t outputPins[NUM_PINS] = {32, 33, 25, 26, 27, 14, 12, 13};
+
+uint8_t packet[8];
+uint8_t rxIndex = 0;
+bool receiving = false;
+
+// Lowercase = LOW, uppercase = HIGH, indexed by pin slot
+const char lowChars[NUM_PINS]  = {'j','k','m','l','o','r','s','y'};
+const char highChars[NUM_PINS] = {'J','K','M','L','O','R','S','Y'};
+
+void setup()
+{
+    for (uint8_t i = 0; i < NUM_PINS; i++) {
+        pinMode(outputPins[i], OUTPUT);
+        digitalWrite(outputPins[i], LOW);
+    }
+
+    Serial.begin(115200);
+
+    // Lower CPU clock — this app is UART-bound, not compute-bound.
+    setCpuFrequencyMhz(80);
+}
+
+void handleCommand(uint8_t code)
+{
+    for (uint8_t i = 0; i < NUM_PINS; i++) {
+        if (code == lowChars[i])  { digitalWrite(outputPins[i], LOW);  return; }
+        if (code == highChars[i]) { digitalWrite(outputPins[i], HIGH); return; }
+    }
+}
+
+void loop()
+{
+    if (!Serial.available()) {
+        delay(1); // yield so idle task / light-sleep can kick in
+        return;
+    }
+
+    while (Serial.available())
+    {
+        uint8_t b = Serial.read();
+
+        if (!receiving)
+        {
+            if (b == 0x02)
+            {
+                receiving = true;
+                rxIndex = 0;
+                packet[rxIndex++] = b;
+            }
+        }
+        else
+        {
+            packet[rxIndex++] = b;
+
+            if (rxIndex >= 8)
+            {
+                receiving = false;
+
+                if (packet[0] == 0x02 &&
+                    packet[1] == 'c' &&
+                    packet[2] == 'm' &&
+                    packet[3] == 'd' &&
+                    packet[4] == '(' &&
+                    packet[6] == ')' &&
+                    packet[7] == 0x0A)
+                {
+                    Serial.write((uint8_t)0x47); // no flush needed — async TX
+
+                    handleCommand(packet[5]);
+                }
+
+                rxIndex = 0;
+            }
+        }
+    }
+}
